@@ -44,7 +44,7 @@ class ConfigurationCacheHit : StringSpec({
             )
             GradleRunner.create()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("assemble", "--info", "--configuration-cache")
+                .withArguments("assemble", "--info", "--configuration-cache", "-Dorg.gradle.workers.max=3", "-Dorg.gradle.configureondemand=true")
                 .withPluginClasspath()
                 .withGradleVersion(version)
                 .build()
@@ -54,10 +54,12 @@ class ConfigurationCacheHit : StringSpec({
 
             report.configurationCacheHit shouldBe false
             report.configurationDurationMs shouldNotStartWith "0"
+            report.environment.maxWorkers shouldBe "3"
+            report.environment.switches.configurationOnDemand shouldBe "true"
 
             GradleRunner.create()
                 .withProjectDir(testProjectDir.getRoot())
-                .withArguments("assemble", "--info", "--configuration-cache")
+                .withArguments("assemble", "--info", "--configuration-cache", "-Dorg.gradle.workers.max=5", "-Dorg.gradle.configureondemand=false")
                 .withPluginClasspath()
                 .withGradleVersion(version)
                 .build()
@@ -68,6 +70,8 @@ class ConfigurationCacheHit : StringSpec({
             testProjectDir.delete()
             reportHit.configurationCacheHit shouldBe true
             reportHit.configurationDurationMs shouldStartWith "0"
+            reportHit.environment.maxWorkers shouldBe "5"
+            reportHit.environment.switches.configurationOnDemand shouldBe "false"
         }
     }
 })
